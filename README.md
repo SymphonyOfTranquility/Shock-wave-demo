@@ -1,10 +1,10 @@
 # Shock wave demo
-This is a program that shows almost realistic shock wave on images.
+This is a program that shows realistic shock wave on images.
 Used 2D library SFML to process image and ImGui to show user interface to change parameters.
 
 ## Pre-run instructions
 The program should be run on Visual Studio. \
-Platform configuration: ***Visual Studio 2017 (v141))***. (Required by SFML)\
+Platform configuration: ***Visual Studio 2017 (v141)***. (Required by SFML)\
 Windows SDK version: ***(10.0.18362.0)***. (Required by SFML)\
 Solution configuration should be Release, x64.
 
@@ -19,11 +19,11 @@ Also by default loaded image is *Test Image Colored.jpg* that is included in the
 The demo of shock waves will start immediately from random points.
 
 ### Menu _Load image_
-In this menu, user can find **Load image** button. On a click, user can load his/her image from the disk.
+In this menu, user can find **Load image** button. On a click, user can load his image from the disk.
 
 ### Menu _Algorithm type_
 In this menu, user can find radiobuttons:
-* __Sequencial__ - if is on - works sequencial algorithm;
+* __Sequential__ - if is on - works sequential algorithm;
 * __Parallel__       - if is on - works parallel algorith.
 
 ### Menu _Shock wave parameters_
@@ -34,7 +34,7 @@ In this menu user can configure shock wave and demo parameters:
 	* `0 < speed_simul < 1`	- Simulation is slow down of real time simulation;
 	* `speed_simul == 1`	- Simulation works in **real time**;
 	* `speed_simul > 1`		- Simulation is speed up real time simulation.\
-    By default speed simulation is __1__ (min = 1, max = 200);
+    By default speed simulation is __1__ (min = -1, max = 2);
 
 * __Velocity__ - parameter that changes the speed of shock wave.\
 	By default velocity is __80__ (min = 1, max = 200);
@@ -52,15 +52,15 @@ In this menu user can configure shock wave and demo parameters:
 	By default ring size value is __70__ (min = 1, max = 100).
 	
 ### Menu _Benchmark_
-In this menu user can start benchmark for sequencial and parallel algorithms.
+In this menu user can start benchmark for sequential and parallel algorithms.
 
 * __Steps number__ - number of steps to run each algo.\
     By default steps number value __100__ (min = 100, max = 10000);
 * __Scale image__ - scale size of image only for benchmark. Size after scale is `((scale*N) x (scale*M))`, \
 where 
-    * __scale__ - scale parameter;
-    * __N__ - width; 
-    * __M = 600__ - height.
+    * `scale` - scale parameter;
+    * `N` - width; 
+    * `M = 600` - height.
     
 By default results of benchmark are `-nan(ind)`.
 To start benchmark click button __Start__. After that program will be frozen for a while. \

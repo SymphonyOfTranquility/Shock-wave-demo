@@ -22,11 +22,11 @@ struct ShockWaveParameters
 
 class ShockWave
 {
-    const int IMAGE_MAX_WIDTH_SIZE = 600;
+    const int IMAGE_MAX_HEIGHT_SIZE = 600;
 
     sf::Image image;
-    std::shared_ptr<unsigned int[]> pixels_data;
     ShockWaveParameters shock_wave_parameters;
+    std::shared_ptr<unsigned int[]> pixels_data;
     sf::Vector2u start_position;
     float max_radius;
     bool is_parallel;
@@ -40,11 +40,15 @@ class ShockWave
     bool check_in_ring(const float x, const float y, const float r_inner, const float r_outer) const noexcept;
     sf::Color new_color_for_pixel(const unsigned int i, const unsigned int j, const float radius, const float ring_size) const noexcept;
 
-    void sequencial_algorithm(sf::Image &new_image, const float radius, const float half_ring_size) const noexcept;
+    void sequential_algorithm(sf::Image &new_image, const float radius, const float half_ring_size) const noexcept;
     void parallel_algorithm(sf::Image &new_image, const float radius, const float half_ring_size) const noexcept;
 
     sf::Image copy_of_main_image() const noexcept;
-    long long benchmark_function(const unsigned short int steps_number, const bool parallel_check);
+
+    // algo_type:
+    //      0 - sequential
+    //      1 - parallel
+    long long benchmark_function(const unsigned short int steps_number, const int algo_type) noexcept;
 
     static void draw(sf::RenderWindow &window, const sf::Image &new_image) noexcept;
 
@@ -63,6 +67,6 @@ public:
 
     void show(sf::RenderWindow &window, const float current_time) const noexcept;
 
-    benchmark_data_t benchmark(const unsigned short int steps_number, const float image_scale);
+    benchmark_data_t benchmark(const unsigned short int steps_number, const float image_scale) noexcept;
 };
 

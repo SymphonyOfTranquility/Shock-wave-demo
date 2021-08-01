@@ -3,7 +3,7 @@
 
 namespace wave_math
 {
-    float get_distance(const sf::Vector2u a, const sf::Vector2u b) noexcept
+    float distance(const sf::Vector2u a, const sf::Vector2u b) noexcept
     {
         const sf::Vector2f difference(sf::Vector2f(a) - sf::Vector2f(b));
         return std::sqrt(difference.x * difference.x + difference.y * difference.y);

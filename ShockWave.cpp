@@ -18,10 +18,10 @@ void ShockWave::recalculate_max_radius() noexcept
 {
     sf::Vector2u img_size = image.getSize();
 
-    const float distance_center_corner_0 = wave_math::get_distance(start_position, { 0, 0 });
-    const float distance_center_corner_1 = wave_math::get_distance(start_position, { 0, img_size.y });
-    const float distance_center_corner_2 = wave_math::get_distance(start_position, { img_size.x, 0 });
-    const float distance_center_corner_3 = wave_math::get_distance(start_position, { img_size.x, img_size.y });
+    const float distance_center_corner_0 = wave_math::distance(start_position, { 0, 0 });
+    const float distance_center_corner_1 = wave_math::distance(start_position, { 0, img_size.y });
+    const float distance_center_corner_2 = wave_math::distance(start_position, { img_size.x, 0 });
+    const float distance_center_corner_3 = wave_math::distance(start_position, { img_size.x, img_size.y });
 
     const float max_distance_corners_01 = std::max(distance_center_corner_0, distance_center_corner_1);
     const float max_distance_corners_23 = std::max(distance_center_corner_2, distance_center_corner_3);
@@ -47,11 +47,11 @@ bool ShockWave::check_in_ring(const float x, const float y, const float r_inner,
     return (r_inner * r_inner <= dist && dist <= r_outer * r_outer);
 }
 
-sf::Color ShockWave::new_color_for_pixel(const unsigned int i, const unsigned int j, const float radius, const float ring_size) const noexcept
+sf::Color ShockWave::new_color_for_pixel(const unsigned int i, const unsigned int j, const float radius, const float half_ring_size) const noexcept
 {
-    const float distance = wave_math::get_distance(start_position, { j, i });
+    const float distance = wave_math::distance(start_position, { j, i });
     const float delta_rad = radius - distance;
-    const float normalized = (delta_rad + ring_size) / (2.f * ring_size);
+    const float normalized = (delta_rad + half_ring_size) / (2.f * half_ring_size);
     const float normalized_on_real = shock_wave_parameters.most_left_x_value + normalized * (shock_wave_parameters.most_right_x_value - shock_wave_parameters.most_left_x_value);
     const float y0 = wave_math::cumulative_distribution_function(shock_wave_parameters.most_left_x_value, shock_wave_parameters.mean, shock_wave_parameters.variance);
     float y = wave_math::cumulative_distribution_function(-normalized_on_real, shock_wave_parameters.mean, shock_wave_parameters.variance);
@@ -66,7 +66,7 @@ sf::Color ShockWave::new_color_for_pixel(const unsigned int i, const unsigned in
     return image.getPixel(unsigned int(pos_x), unsigned int(pos_y));
 }
 
-void ShockWave::sequencial_algorithm(sf::Image &new_image, const float radius, const float half_ring_size) const noexcept
+void ShockWave::sequential_algorithm(sf::Image &new_image, const float radius, const float half_ring_size) const noexcept
 {
     for (unsigned int i = 0; i < new_image.getSize().y; ++i)
         for (unsigned int j = 0; j < new_image.getSize().x; ++j)
@@ -92,7 +92,6 @@ void ShockWave::parallel_algorithm(sf::Image &new_image, const float radius, con
                 ans = new_color_for_pixel(i, j, radius, half_ring_size);
             else
                 ans = new_image.getPixel(j, i);
-
             const int alpha_offset = 24, blue_offset = 16, green_offset = 8;
             item = (ans.a << alpha_offset) | (ans.b << blue_offset) | (ans.g << green_offset) | ans.r;
         });
@@ -110,7 +109,7 @@ sf::Image ShockWave::copy_of_main_image() const noexcept
     return new_image;
 }
 
-long long ShockWave::benchmark_function(const unsigned short int steps_number, bool parallel_check)
+long long ShockWave::benchmark_function(const unsigned short int steps_number, const int algo_type) noexcept
 {
     using namespace std::chrono;
 
@@ -120,10 +119,10 @@ long long ShockWave::benchmark_function(const unsigned short int steps_number, b
     for (unsigned short int i = 0; i < steps_number; ++i)
     {
         const float current_radius = float(rand()) / float(RAND_MAX) * max_radius;
-        if (parallel_check)
+        if (algo_type == 1)
             parallel_algorithm(new_image, current_radius, half_ring_size);
         else
-            sequencial_algorithm(new_image, current_radius, half_ring_size);
+            sequential_algorithm(new_image, current_radius, half_ring_size);
     }
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
@@ -148,7 +147,7 @@ bool ShockWave::load_image(const std::string &file_name) noexcept
 
     const int width = loaded_image.getSize().x;
     const int height = loaded_image.getSize().y;
-    const float scale = float(IMAGE_MAX_WIDTH_SIZE) / float(height);
+    const float scale = float(IMAGE_MAX_HEIGHT_SIZE) / float(height);
 
     sf::Image new_image;
     new_image.create(unsigned int(width * scale), unsigned int(height * scale), sf::Color(0, 0, 0));
@@ -180,9 +179,9 @@ ShockWaveParameters &ShockWave::get_shock_wave_parameters_ref() noexcept
 
 float ShockWave::radius_by_time(const float current_time) const noexcept
 {
-    const float scale_coefficient = 10;
-    const float scale_time = scale_coefficient * current_time;
-    return (scale_time * shock_wave_parameters.velocity);
+    const float scale_coefficient = 10.f;
+    const float scaled_time = scale_coefficient * current_time;
+    return (scaled_time * shock_wave_parameters.velocity);
 }
 
 bool ShockWave::is_finished(const float current_time) const noexcept
@@ -209,33 +208,33 @@ void ShockWave::show(sf::RenderWindow &window, const float current_time) const n
     if (is_parallel)
         parallel_algorithm(new_image, current_radius, half_ring_size);
     else
-        sequencial_algorithm(new_image, current_radius, half_ring_size);
+        sequential_algorithm(new_image, current_radius, half_ring_size);
 
     draw(window, new_image);
 }
 
 
-benchmark_data_t ShockWave::benchmark(const unsigned short int steps_number, const float image_scale)
+benchmark_data_t ShockWave::benchmark(const unsigned short int steps_number, const float image_scale) noexcept
 {
-    sf::Image previous_image = copy_of_main_image();
+    sf::Image original_image = copy_of_main_image();
     sf::Image new_image;
     new_image.create(unsigned int(image.getSize().x*image_scale), unsigned int(image.getSize().y*image_scale), sf::Color(0, 0, 0));
     
     wave_math::resize_image(image, new_image);
     image = new_image;
 
-    const float miliseconds_to_seconds = 1000.0;
-    const float sequencial_algo_work_time = float(benchmark_function(steps_number, false)) / miliseconds_to_seconds;
+    const float miliseconds_to_seconds = 1000.f;
+    const float sequential_algo_work_time = float(benchmark_function(steps_number, false)) / miliseconds_to_seconds;
 
     if (is_parallel)
         clean_pixels_data();
 
     precalculate_pixels_data_values();
-    const float parallel_algo_work_time = benchmark_function(steps_number, true) / miliseconds_to_seconds;
+    const float parallel_algo_work_time = float(benchmark_function(steps_number, true)) / miliseconds_to_seconds;
     clean_pixels_data();
 
-    image = previous_image;
+    image = original_image;
     if (is_parallel)
         precalculate_pixels_data_values();
-    return { sequencial_algo_work_time, parallel_algo_work_time };
+    return { sequential_algo_work_time, parallel_algo_work_time };
 }

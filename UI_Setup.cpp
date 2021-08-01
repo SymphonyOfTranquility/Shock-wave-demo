@@ -70,9 +70,9 @@ namespace ui_setup
         ImGui::End();
     }
 
-    void parallel_menu(ShockWave &shock_wave, const bool on_start) noexcept
+    void algorithm_type_menu(ShockWave &shock_wave, const bool on_start) noexcept
     {
-        if (ImGui::Begin("Parallel"))
+        if (ImGui::Begin("Algorithm type"))
         {
             if (on_start)
             {
@@ -80,7 +80,7 @@ namespace ui_setup
                 ImGui::SetWindowPos(window_pos);
             }
             int is_parallel = shock_wave.get_is_parallel();
-            ImGui::RadioButton("Sequencial", &is_parallel, 0);
+            ImGui::RadioButton("Sequential", &is_parallel, 0);
             ImGui::RadioButton("Parallel", &is_parallel, 1);
 
             if (bool(is_parallel) != shock_wave.get_is_parallel())
@@ -105,9 +105,9 @@ namespace ui_setup
             if (ImGui::Button("Start"))
                 benchmark_data = shock_wave.benchmark(steps_number, image_scale);
 
-            std::string label_sequencial = std::string("Sequencial algorithm time: ") + std::to_string(benchmark_data.first);
+            std::string label_sequential = std::string("Sequential algorithm time: ") + std::to_string(benchmark_data.first);
             std::string label_parallel = std::string("Parallel algorithm time: ") + std::to_string(benchmark_data.second);
-            ImGui::Text(label_sequencial.c_str());
+            ImGui::Text(label_sequential.c_str());
             ImGui::Text(label_parallel.c_str());
         }
         ImGui::End();
@@ -118,7 +118,7 @@ namespace ui_setup
         static bool on_start = true;
         load_photo_menu(window, shock_wave, on_start);
         shock_wave_parameters_menu(shock_wave, simulation_speed, on_start);
-        parallel_menu(shock_wave, on_start);
+        algorithm_type_menu(shock_wave, on_start);
         benchmark_menu(shock_wave, benchmark_data, on_start);
         on_start = false;
     }
